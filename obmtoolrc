@@ -1,0 +1,33 @@
+[defaults]
+user=usera
+server=https://myobm.obm.org/obm-sync/services/
+tbversion=24
+obmversion=next-tb24
+verbose=True
+
+[paths]
+lightning-tb24=~/releases/ltn26/lightning-mac.xpi
+lightning-tb17=~/releases/obm/lightning-1.9.24obm-tb-mac.xpi
+lightning-tb10=~/releases/obm/lightning-1.2.3.24obm-tb-mac.xpi
+lightning-tb3=~/releases/obm/lightning-1.0b2.25obm-tb-mac.xpi
+
+obm-next-tb24=~/obm/tb24/lightning-connector-pkewisch/build/stage
+obm-next-tb17=~/obm/tb17/lightning-connector-pkewisch/build/stage
+
+thunderbird-24=~/mozilla/tbesr24/Thunderbird.app
+thunderbird-17=~/mozilla/tbesr17/Thunderbird.app
+thunderbird-10=~/mozilla/tbesr10/Thunderbird.app
+thunderbird-3=~/mozilla/tb31/Thunderbird.app
+
+profileCache=~/.obmtool/cache
+
+[profile]
+#certificates=vm.obm.org:443,vm.obm.org:143
+#signons=obm-obm-obm|obm-obm-obm|userb|userb
+extensions=
+ ~/mozilla/dist-extensions/ics-inspector-0.8.xpi
+ ~/mozilla/dist-extensions/obmdeveloper-0.1.xpi
+
+[preferences]
+#dom.report_all_js_exceptions=True
+#nglayout.debug.disable_xul_cache=True
