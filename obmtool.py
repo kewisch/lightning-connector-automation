@@ -34,7 +34,7 @@ def parseArgs():
   parser.add_argument('-u', '--user', type=str, default=config.get("defaults", "user"), help="The OBM user to set up")
   parser.add_argument('-s', '--server', type=str, default=config.get("defaults", "server"),  help="The sync services URI")
   parser.add_argument('-e', '--extension', type=str, nargs='+', default=[], help="An additional extension to install, can be specified multiple times")
-  parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], help="Additional preferences to set, can be specified multiple times.")
+  parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], metavar='key=value', help="Additional preferences to set, can be specified multiple times. Value can be a string, integer or true|false.")
   parser.add_argument('-v', '--verbose', action='store_true', default=config.get("defaults", "verbose"), help="Show more information about whats going on")
   args = parser.parse_args()
 
@@ -99,10 +99,13 @@ def parseArgs():
   preferences.extend([x.split("=", 2) for x in args.pref])
   for k, v in preferences:
     lv = v.lower()
-    if lv == "true": v = True
-    elif lv == "false": v = False
-    try: v = int(v)
-    except: pass
+    if lv == "true":
+      v = True
+    elif lv == "false":
+      v = False
+    else:
+      try: v = int(v)
+      except: pass
     extraprefs[k] = v
   runner.profile.set_preferences(extraprefs.items(), "prefs.js")
 
