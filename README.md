@@ -13,7 +13,7 @@ Setup
 The tool has not been packaged as a python package yet, so you will
 have to first install a few dependencies:
 
-    pip install M2Crypto iniparse mozrunner mozprofile
+    pip install M2Crypto iniparse mozrunner mozprofile mozmill
 
 Now you will need to copy the obmtoolrc file to ~/.obmtoolrc and make
 any modifications you need. You also need to create the profileCache
