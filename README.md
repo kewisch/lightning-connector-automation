@@ -126,6 +126,17 @@ from the [paths] section for the options -t, -l and -o.
                             multiple times.
       -v, --verbose         Show more information about whats going on
 
+Running MozMill Tests
+=====================
+
+With obmtool you can run MozMill tests. Initial setup will occur using the
+configuration and arguments provided. To use obmtool in mozmill mode, pass a
+test file or directory to the -m option. When passing a directory, all files
+beginning with "test\_" will be processed. See the next section for examples.
+
+NOTE: Running multiple tests, either via directory or passing multiple -m
+options does not work yet.
+
 Examples
 ========
 
@@ -139,6 +150,13 @@ default values:
 
     obmtool -t 24 -l ~/releases/lightning-2.6.1-custom.xpi
 
+Run a specific mozmill test by its filename on Thunderbird 24 with userb.
+
+    obmtool -t 24 -u userb -m ~/tests/test_create_event.js
+
+Run all mozmill tests in the ~/tests directory, using the same options.
+
+    obmtool -t 24 -u userb -m ~/tests
 
 Roadmap
 =======

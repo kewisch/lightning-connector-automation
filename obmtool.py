@@ -7,12 +7,17 @@
 import argparse
 import logging
 import tempfile
+import traceback
 import re
 import sys
 import os
 
 from obmtool.runner import ObmRunner
 from obmtool.config import config
+
+import jsbridge
+import mozmill
+import mozmill.logger
 
 def createRunner(args):
   binary = os.path.expanduser(config.require("paths", "thunderbird-%s" % args.tbversion))
@@ -36,6 +41,9 @@ def parseArgs():
   parser.add_argument('-e', '--extension', type=str, nargs='+', default=[], help="An additional extension to install, can be specified multiple times")
   parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], metavar='key=value', help="Additional preferences to set, can be specified multiple times. Value can be a string, integer or true|false.")
   parser.add_argument('-v', '--verbose', action='store_true', default=config.get("defaults", "verbose"), help="Show more information about whats going on")
+  parser.add_argument('-m', '--mozmill', type=str, nargs='+', default=[], help="Run a specific mozmill test")
+  parser.add_argument('--format', type=str, default='pprint-color', metavar='[json|pprint|pprint-color]', help="Mozmill output format (default: pprint-color)")
+  parser.add_argument('--logfile', type=str, default=None, help="Log mozmill events to a file in addition to the console")
   args = parser.parse_args()
 
   # Set up logging
@@ -93,6 +101,10 @@ def parseArgs():
   for extension in extensions:
     runner.profile.addon_manager.install_from_path(os.path.expanduser(extension))
 
+  if args.mozmill:
+    for extension in mozmill.ADDONS:
+      runner.profile.addon_manager.install_from_path(extension)
+
   # Add extra preferences specified on commandline
   extraprefs = {}
   preferences = config.getAll("preferences")
@@ -107,6 +119,20 @@ def parseArgs():
       try: v = int(v)
       except: pass
     extraprefs[k] = v
+
+  if args.mozmill:
+    # Set up jsbridge port
+    args.jsbridge_port = jsbridge.find_port()
+
+    # Add testing prefs
+    extraprefs['extensions.jsbridge.port'] = args.jsbridge_port
+    extraprefs['focusmanager.testmode'] = True
+
+    # TODO main window controller will timeout finding the main window since
+    # the sync takes so long.
+    extraprefs['extensions.obm.syncOnStart'] = False
+
+  # Set up extra preferences in the profile
   runner.profile.set_preferences(extraprefs.items(), "prefs.js")
 
   return runner, args
@@ -120,7 +146,51 @@ def run(runner, args):
   if args.verbose:
     print runner.profile.summary()
 
-  # Run it, showing obm-connector-log
+  if args.mozmill:
+    run_mozmill(wrap_mozmill_runner(runner, args), args)
+  else:
+    run_thunderbird(runner, args)
+
+def wrap_mozmill_runner(runner, args):
+  level = "DEBUG" if args.verbose else "INFO"
+  loghandler = mozmill.logger.LoggerListener(format=args.format,console_level=level,file_level=level, log_file=args.logfile)
+  return mozmill.MozMill(runner, args.jsbridge_port, handlers=[loghandler])
+
+def run_mozmill(runner, args):
+  tests = []
+  for test in args.mozmill:
+    testpath = os.path.expanduser(test)
+    realpath = os.path.realpath(testpath)
+
+    if not os.path.exists(testpath):
+      raise Exception("Not a valid test file/directory: %s" % test)
+
+    def testname(t):
+      if os.path.isdir(realpath):
+        return os.path.join(test, os.path.relpath(t, testpath))
+      return test
+
+    tests.extend([{'name': testname(t), 'path': t }
+                  for t in mozmill.collect_tests(testpath)])
+
+  if args.verbose and len(tests):
+    print "Running these tests:"
+    print "\t" + "\n\t".join(map(lambda x: x['path'], tests))
+
+  exception = None
+  try:
+    runner.run(tests, True)
+  except:
+    exception_type, exception, tb = sys.exc_info()
+
+  results = runner.finish(fatal=exception is not None)
+
+  if exception:
+      traceback.print_exception(exception_type, exception, tb)
+  if exception or results.fails:
+      sys.exit(1)
+
+def run_thunderbird(runner, args):
   if not os.path.exists(runner.profile.connectorLog):
     fp = open(runner.profile.connectorLog, "a")
     fp.close()
