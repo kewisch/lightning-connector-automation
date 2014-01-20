@@ -93,8 +93,7 @@ class ObmProfile(ThunderbirdProfile):
       'extensions.obm.log.level': -1,
     }
 
-    # Create a new profile
-    self.create_new_profile()
+    # Set up prefs.js
     self.set_preferences(prefs.items(), 'prefs.js')
 
     # Install addons, Lightning and OBM
