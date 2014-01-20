@@ -102,9 +102,10 @@ Usage
 Most usage is explained using obmtool --help. Note you can use aliases
 from the [paths] section for the options -t, -l and -o.
 
-    usage: obmtool.py [-h] [-t TBVERSION] [-l LIGHTNING] [-o OBM] [-u USER]
-                      [-s SERVER] [-e EXTENSION [EXTENSION ...]]
-                      [-p PREF [PREF ...]] [-v]
+    usage: obmtool [-h] [-t TBVERSION] [-l LIGHTNING] [-o OBM] [-u USER]
+                   [-s SERVER] [-e EXTENSION [EXTENSION ...]]
+                   [-p key=value [key=value ...]] [-m MOZMILL [MOZMILL ...]]
+                   [--format [json|pprint|pprint-color]] [--logfile LOGFILE] [-v]
 
     Start Thunderbird with a preconfigured OBM setup
 
@@ -121,9 +122,16 @@ from the [paths] section for the options -t, -l and -o.
       -e EXTENSION [EXTENSION ...], --extension EXTENSION [EXTENSION ...]
                             An additional extension to install, can be specified
                             multiple times
-      -p PREF [PREF ...], --pref PREF [PREF ...]
+      -p key=value [key=value ...], --pref key=value [key=value ...]
                             Additional preferences to set, can be specified
-                            multiple times.
+                            multiple times. Value can be a string, integer or
+                            true|false.
+      -m MOZMILL [MOZMILL ...], --mozmill MOZMILL [MOZMILL ...]
+                            Run a specific mozmill test
+      --format [json|pprint|pprint-color]
+                            Mozmill output format (default: pprint-color)
+      --logfile LOGFILE     Log mozmill events to a file in addition to the
+                            console
       -v, --verbose         Show more information about whats going on
 
 Running MozMill Tests
