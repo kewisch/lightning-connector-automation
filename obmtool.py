@@ -150,7 +150,9 @@ def run(runner, args):
 
 def wrap_mozmill_runner(runner, args):
   level = "DEBUG" if args.verbose else "INFO"
+  llevel = logging.DEBUG if args.verbose else logging.INFO
   loghandler = mozmill.logger.LoggerListener(format=args.format,console_level=level,file_level=level, log_file=args.logfile)
+  loghandler.logger.setLevel(llevel)
   return mozmill.MozMill(runner, args.jsbridge_port, handlers=[loghandler])
 
 def run_mozmill(runner, args):
