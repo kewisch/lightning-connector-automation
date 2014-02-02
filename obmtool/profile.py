@@ -14,7 +14,7 @@ from certificates import CertOverrideFile, CertOverrideEntry
 from signons import Signons3File, SignonFileEntry
 
 class ObmProfile(ThunderbirdProfile):
-  def __init__(self, userName, serverUri, lightningXPI, obmXPI,
+  def __init__(self, userName, serverUri,
                tbVersion, cachePath="profileCache", *args, **kwargs):
     self.profileName = "%s-tb%d-%s" % (userName, tbVersion, time.strftime("%Y-%m-%d", time.localtime()))
     profilePath = os.path.join(cachePath, self.profileName)
@@ -22,8 +22,6 @@ class ObmProfile(ThunderbirdProfile):
     super(ObmProfile, self).__init__(profile=profilePath, *args, **kwargs)
     self.userName = userName
     self.serverUri = serverUri
-    self.lightningXPI = lightningXPI
-    self.obmXPI = obmXPI
     self.tbVersion = tbVersion
 
     self.signons = Signons3File(path=os.path.join(profilePath, "signons3.txt"))
@@ -40,6 +38,10 @@ class ObmProfile(ThunderbirdProfile):
   def connectorLog(self):
     absProfilePath = os.path.abspath(self.profile)
     return os.path.join(absProfilePath, "obm-connector-log.txt")
+
+  def reset(self):
+    super(ObmProfile, self).reset()
+    self.initProfile()
 
   def initProfile(self):
     absProfilePath = os.path.abspath(self.profile)
@@ -93,12 +95,10 @@ class ObmProfile(ThunderbirdProfile):
       'extensions.obm.log.level': -1,
     }
 
-    # Set up prefs.js
+    # Set up prefs.js. Need to set self._preferences again because mozprofile
+    # defaults to user.js, which doesn't seem to work with Thunderbird.
     self.set_preferences(prefs.items(), 'prefs.js')
-
-    # Install addons, Lightning and OBM
-    self.addon_manager.install_from_path(self.lightningXPI)
-    self.addon_manager.install_from_path(self.obmXPI)
+    self.set_preferences(self._preferences, 'prefs.js')
 
     # Add saved passwords
     self.signons.addEntry(

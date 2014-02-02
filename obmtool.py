@@ -24,11 +24,10 @@ def createRunner(args):
   return ObmRunner.create(binary=binary, profile_args={
                             'userName': args.user,
                             'serverUri': args.server,
-                            'lightningXPI': args.lightning,
-                            'obmXPI': args.obm,
                             'tbVersion': args.tbversion,
                             'addons': args.extension,
-                            'cachePath': args.cachePath
+                            'cachePath': args.cachePath,
+                            'preferences': args.preferences
                           })
 
 def parseArgs():
@@ -75,35 +74,17 @@ def parseArgs():
   if args.cachePath is None:
     args.cachePath = tempfile.gettempdir()
 
-  args.obm = os.path.expanduser(args.obm)
-  args.lightning = os.path.expanduser(args.lightning)
   args.cachePath = os.path.expanduser(args.cachePath)
-
-  # For the following args we need the runner already
-  runner = createRunner(args)
-
-  # Add extra certificates from the prefs
-  for cert in filter(bool, re.split("[,\n]", config.get("profile", "certificates", ""))):
-    host,port = cert.split(":")
-    runner.profile.overrides.addEntry(host, int(port))
-
-  # Add extra signons from the prefs
-  for signon in filter(bool, re.split("[,\n]", config.get("profile", "signons", ""))):
-    hostname,realm,user,password = signon.split("|")
-    runner.profile.signons.addEntry(hostname, realm, user, password)
-
-  # Need to flush profile after adding certs/signons
-  runner.profile.flush()
 
   # Add extra addons from prefs and passed options
   extensions = filter(bool, re.split("[,\n]", config.get("profile", "extensions", "")))
   extensions.extend(args.extension)
-  for extension in extensions:
-    runner.profile.addon_manager.install_from_path(os.path.expanduser(extension))
-
+  extensions.append(args.obm)
+  extensions.append(args.lightning)
   if args.mozmill:
-    for extension in mozmill.ADDONS:
-      runner.profile.addon_manager.install_from_path(extension)
+    extensions.extend(mozmill.ADDONS)
+
+  args.extension = map(os.path.expanduser, extensions)
 
   # Add extra preferences specified on commandline
   extraprefs = {}
@@ -133,7 +114,23 @@ def parseArgs():
     extraprefs['extensions.obm.syncOnStart'] = False
 
   # Set up extra preferences in the profile
-  runner.profile.set_preferences(extraprefs.items(), "prefs.js")
+  args.preferences = extraprefs
+
+  # For the following args we need the runner already
+  runner = createRunner(args)
+
+  # Add extra certificates from the prefs
+  for cert in filter(bool, re.split("[,\n]", config.get("profile", "certificates", ""))):
+    host,port = cert.split(":")
+    runner.profile.overrides.addEntry(host, int(port))
+
+  # Add extra signons from the prefs
+  for signon in filter(bool, re.split("[,\n]", config.get("profile", "signons", ""))):
+    hostname,realm,user,password = signon.split("|")
+    runner.profile.signons.addEntry(hostname, realm, user, password)
+
+  # Need to flush profile after adding certs/signons
+  runner.profile.flush()
 
   return runner, args
 
