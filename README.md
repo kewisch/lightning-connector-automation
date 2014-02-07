@@ -39,6 +39,9 @@ This section holds defaults for command line options:
     # If true, verbose output will be used
     verbose=True
 
+    # If true, the profile will be reset on each startup
+    reset=True
+
 paths section
 -------------
 This section contains a few aliases that can be used either in the

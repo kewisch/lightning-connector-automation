@@ -27,7 +27,8 @@ def createRunner(args):
                             'tbVersion': args.tbversion,
                             'addons': args.extension,
                             'cachePath': args.cachePath,
-                            'preferences': args.preferences
+                            'preferences': args.preferences,
+                            'reset': args.reset
                           })
 
 def parseArgs():
@@ -39,6 +40,7 @@ def parseArgs():
   parser.add_argument('-s', '--server', type=str, default=config.get("defaults", "server"),  help="The sync services URI")
   parser.add_argument('-e', '--extension', type=str, nargs='+', default=[], help="An additional extension to install, can be specified multiple times")
   parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], metavar='key=value', help="Additional preferences to set, can be specified multiple times. Value can be a string, integer or true|false.")
+  parser.add_argument('-r', '--reset', action='store_true', default=config.get("defaults", "reset"), help="Reset the currently used profile before starting")
   parser.add_argument('-m', '--mozmill', type=str, nargs='+', default=[], help="Run a specific mozmill test")
   parser.add_argument('--format', type=str, default='pprint-color', metavar='[json|pprint|pprint-color]', help="Mozmill output format (default: pprint-color)")
   parser.add_argument('--logfile', type=str, default=None, help="Log mozmill events to a file in addition to the console")

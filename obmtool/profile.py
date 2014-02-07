@@ -5,6 +5,8 @@
 
 from mozprofile.profile import ThunderbirdProfile
 from mozprofile.addons import AddonManager
+import mozfile
+
 from urlparse import urlparse
 import os.path
 import sys
@@ -15,9 +17,13 @@ from signons import Signons3File, SignonFileEntry
 
 class ObmProfile(ThunderbirdProfile):
   def __init__(self, userName, serverUri,
-               tbVersion, cachePath="profileCache", *args, **kwargs):
+               tbVersion, cachePath="profileCache", reset=False, *args, **kwargs):
     self.profileName = "%s-tb%d-%s" % (userName, tbVersion, time.strftime("%Y-%m-%d", time.localtime()))
     profilePath = os.path.join(cachePath, self.profileName)
+
+    if reset:
+      print "Reseting profile in",profilePath
+      mozfile.remove(profilePath)
 
     super(ObmProfile, self).__init__(profile=profilePath, *args, **kwargs)
     self.userName = userName
