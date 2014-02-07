@@ -196,6 +196,7 @@ def run_thunderbird(runner, args):
     fp = open(runner.profile.connectorLog, "a")
     fp.close()
   logfile = open(runner.profile.connectorLog)
+  restartMode = config.get("defaults", "restart", False)
   try:
     while True:
       print "Starting Thunderbird..."
@@ -211,7 +212,13 @@ def run_thunderbird(runner, args):
           runner.wait(1)
           logfile.seek(where)
 
-      raw_input("Restart? (Ctrl-C to cancel)")
+      if restartMode is True or restartMode == "prompt":
+        raw_input("\nRestart? (Ctrl-C to cancel)")
+      elif restartMode == "auto":
+        continue
+      else: # restartMode is False or unset
+        break
+
   except KeyboardInterrupt:
     print "\nCleaning up..."
     runner.cleanup()

@@ -42,6 +42,12 @@ This section holds defaults for command line options:
     # If true, the profile will be reset on each startup
     reset=True
 
+    # Sets the behavior after Thunderbird quits.
+    # prompt - In the console, prompt the user if a restart should be done
+    # auto   - Automatically restart Thunderbird
+    # False  - (default) Exit after Thunderbird has been quitted
+    restart=prompt
+
 paths section
 -------------
 This section contains a few aliases that can be used either in the

@@ -45,16 +45,37 @@ class ObmToolConfig(object):
     else:
       return defaultValue
 
+  @staticmethod
+  def correctType(val):
+    lval = val.lower() if isinstance(val, basestring) else val
+    if lval in ("true", "false"):
+      return lval == "true"
+
+    try:
+      return int(val)
+    except (ValueError, TypeError):
+      pass
+
+    try:
+      return float(val)
+    except (ValueError, TypeError):
+      pass
+
+    return val
+
   def get(self, section, key, defaultValue=None, exception=False):
+    val = None
     if section in self.userConfig and key in self.userConfig[section]:
-      return self.userConfig[section][key].decode("string_escape")
+      val = self.userConfig[section][key].decode("string_escape")
     elif section in self.defaultConfig and key in self.defaultConfig[section]:
-      return self.defaultConfig[section][key].decode("string_escape")
+      val = self.defaultConfig[section][key].decode("string_escape")
     else:
       if exception:
         raise ConfigMissingException(section, key)
       else:
-        return defaultValue
+        val = defaultValue
+
+    return ObmToolConfig.correctType(val)
 
   def set(self, section, key, value):
     self.dirty = True
