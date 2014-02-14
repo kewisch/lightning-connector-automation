@@ -92,6 +92,9 @@ def parseArgs():
   if args.cachePath is None:
     args.cachePath = tempfile.gettempdir()
 
+  # Expand user path for later use
+  args.obm = os.path.expanduser(args.obm)
+  args.lightning = os.path.expanduser(args.lightning)
   args.cachePath = os.path.expanduser(args.cachePath)
 
   # Add extra addons from prefs and passed options
