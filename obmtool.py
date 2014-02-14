@@ -15,10 +15,12 @@ import iniparse
 
 from obmtool.runner import ObmRunner
 from obmtool.config import config
+from obmtool.report import JUnitReport
 
 import jsbridge
 import mozmill
 import mozmill.logger
+import mozmill.report
 
 def createRunner(args):
   return ObmRunner.create(binary=args.thunderbird, profile_args={
@@ -42,7 +44,7 @@ def parseArgs():
   parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], metavar='key=value', help="Additional preferences to set, can be specified multiple times. Value can be a string, integer or true|false.")
   parser.add_argument('-r', '--reset', action='store_true', default=config.get("defaults", "reset"), help="Reset the currently used profile before starting")
   parser.add_argument('-m', '--mozmill', type=str, nargs='+', default=[], help="Run a specific mozmill test")
-  parser.add_argument('--format', type=str, default='pprint-color', metavar='[json|pprint|pprint-color]', help="Mozmill output format (default: pprint-color)")
+  parser.add_argument('--format', type=str, default='pprint-color', metavar='[pprint|pprint-color|json|xunit]', help="Mozmill output format (default: pprint-color)")
   parser.add_argument('--logfile', type=str, default=None, help="Log mozmill events to a file in addition to the console")
   parser.add_argument('-v', '--verbose', action='store_true', default=config.get("defaults", "verbose"), help="Show more information about whats going on")
   args = parser.parse_args()
@@ -171,11 +173,30 @@ def run(runner, args):
     run_thunderbird(runner, args)
 
 def wrap_mozmill_runner(runner, args):
+  handlers = []
   level = "DEBUG" if args.verbose else "INFO"
   llevel = logging.DEBUG if args.verbose else logging.INFO
-  loghandler = mozmill.logger.LoggerListener(format=args.format,console_level=level,file_level=level, log_file=args.logfile)
-  loghandler.logger.setLevel(llevel)
-  return mozmill.MozMill(runner, args.jsbridge_port, handlers=[loghandler])
+
+  if args.format == "xunit":
+    # Output to logfile as xunit
+    class Testrun(object):
+      report_type = 'obm-mozmill'
+    reportHandler = JUnitReport(args.logfile, Testrun())
+    handlers.append(reportHandler)
+
+    # Also output to the console
+    logformat = "pprint-color" if sys.stdout.isatty() else "pprint"
+    loghandler = mozmill.logger.LoggerListener(format=logformat, console_level=level)
+    loghandler.logger.setLevel(llevel)
+    handlers.append(loghandler)
+  else:
+    # Otherwise set up the combined console/file logger
+    loghandler = mozmill.logger.LoggerListener(format=args.format,console_level=level,
+                                               file_level=level, log_file=args.logfile)
+    loghandler.logger.setLevel(llevel)
+    handlers.append(loghandler)
+
+  return mozmill.MozMill(runner, args.jsbridge_port, handlers=handlers)
 
 def run_mozmill(runner, args):
   tests = []
