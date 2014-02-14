@@ -111,7 +111,7 @@ Usage
 Most usage is explained using obmtool --help. Note you can use aliases
 from the [paths] section for the options -t, -l and -o.
 
-    usage: obmtool [-h] [-t TBVERSION] [-l LIGHTNING] [-o OBM] [-u USER]
+    usage: obmtool [-h] [-t THUNDERBIRD] [-l LIGHTNING] [-o OBM] [-u USER]
                    [-s SERVER] [-e EXTENSION [EXTENSION ...]]
                    [-p key=value [key=value ...]] [-m MOZMILL [MOZMILL ...]]
                    [--format [json|pprint|pprint-color]] [--logfile LOGFILE] [-v]
@@ -120,8 +120,9 @@ from the [paths] section for the options -t, -l and -o.
 
     optional arguments:
       -h, --help            show this help message and exit
-      -t TBVERSION, --tbversion TBVERSION
-                            The Thunderbird version to start (17,24,...)
+      -t THUNDERBIRD, --tbversion THUNDERBIRD
+                            The Thunderbird version (17,24,...), or a path to the
+                            binary.
       -l LIGHTNING, --lightning LIGHTNING
                             The path to the Lightning XPI
       -o OBM, --obm OBM     The path to the OBM XPI
@@ -162,10 +163,10 @@ connector from the next-tb24 alias, with usera:
 
     obmtool -t 24 -o next-tb24 -u usera
 
-Example of how to use a custom Lightning package, using mostly
-default values:
+Example of how to use a custom Lightning and Thunderbird package:
 
-    obmtool -t 24 -l ~/releases/lightning-2.6.1-custom.xpi
+    obmtool -t ~/releases/tb24/Thunderbird.app -l ~/releases/lightning-2.6.1-custom.xpi # on mac
+    obmtool -t ~/releases/tb24/thunderbird-bin -l ~/releases/lightning-2.6.1-custom.xpi # on linux
 
 Run a specific mozmill test by its filename on Thunderbird 24 with userb.
 

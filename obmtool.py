@@ -11,6 +11,7 @@ import traceback
 import re
 import sys
 import os
+import iniparse
 
 from obmtool.runner import ObmRunner
 from obmtool.config import config
@@ -20,8 +21,7 @@ import mozmill
 import mozmill.logger
 
 def createRunner(args):
-  binary = os.path.expanduser(config.require("paths", "thunderbird-%s" % args.tbversion))
-  return ObmRunner.create(binary=binary, profile_args={
+  return ObmRunner.create(binary=args.thunderbird, profile_args={
                             'userName': args.user,
                             'serverUri': args.server,
                             'tbVersion': args.tbversion,
@@ -33,7 +33,7 @@ def createRunner(args):
 
 def parseArgs():
   parser = argparse.ArgumentParser(description="Start Thunderbird with a preconfigured OBM setup")
-  parser.add_argument('-t', '--tbversion', type=int, default=config.get("defaults", "tbversion"), help="The Thunderbird version to start (17,24,...)")
+  parser.add_argument('-t', '--thunderbird', type=str, default=config.get("defaults", "tbversion"), help="The Thunderbird version (17,24,...), or a path to the binary.")
   parser.add_argument('-l', '--lightning', type=str, help="The path to the Lightning XPI")
   parser.add_argument('-o', '--obm', type=str, help="The path to the OBM XPI")
   parser.add_argument('-u', '--user', type=str, default=config.get("defaults", "user"), help="The OBM user to set up")
@@ -51,8 +51,28 @@ def parseArgs():
   if args.verbose:
     logging.basicConfig(level=logging.INFO)
 
+  # Set up the Thunderbird version and path
+  try:
+    # First check if a version number was passed and get the path from the config
+    args.tbversion = int(args.thunderbird)
+    args.thunderbird = os.path.expanduser(config.require("paths", "thunderbird-%s" % args.tbversion))
+  except ValueError:
+    # Otherwise it was probably a path. Keep the path in args.thunderbird and
+    # get the version from Thunderbird's application.ini
+    args.thunderbird = os.path.expanduser(args.thunderbird)
+    macpath = os.path.join(args.thunderbird, "Contents", "MacOS")
+    configFile = os.path.join(macpath if os.path.exists(macpath) else args.thunderbird, "application.ini")
+
+    if not os.path.exists(configFile):
+        raise IOError("Could not find Thunderbird at %s" % args.thunderbird)
+
+    with open(configFile) as fp:
+        appini = iniparse.INIConfig(fp)
+        args.tbversion = int(appini['App']['Version'].split(".")[0])
+
+
   # Set up default lightning xpi based on either passed token (i.e tb3) or
-  # passed tbversion
+  # passed thunderbird version
   if args.lightning and not os.path.exists(args.lightning):
     args.lightning = config.get("paths", "lightning-%s" % args.lightning)
     if args.lightning is None:
