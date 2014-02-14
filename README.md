@@ -114,7 +114,8 @@ from the [paths] section for the options -t, -l and -o.
     usage: obmtool [-h] [-t THUNDERBIRD] [-l LIGHTNING] [-o OBM] [-u USER]
                    [-s SERVER] [-e EXTENSION [EXTENSION ...]]
                    [-p key=value [key=value ...]] [-m MOZMILL [MOZMILL ...]]
-                   [--format [json|pprint|pprint-color]] [--logfile LOGFILE] [-v]
+                   [--format [pprint|pprint-color|json|xunit]] [--logfile LOGFILE]
+                   [-v]
 
     Start Thunderbird with a preconfigured OBM setup
 
@@ -138,7 +139,7 @@ from the [paths] section for the options -t, -l and -o.
                             true|false.
       -m MOZMILL [MOZMILL ...], --mozmill MOZMILL [MOZMILL ...]
                             Run a specific mozmill test
-      --format [json|pprint|pprint-color]
+      --format [pprint|pprint-color|json|xunit]
                             Mozmill output format (default: pprint-color)
       --logfile LOGFILE     Log mozmill events to a file in addition to the
                             console
@@ -152,8 +153,8 @@ configuration and arguments provided. To use obmtool in mozmill mode, pass a
 test file or directory to the -m option. When passing a directory, all files
 beginning with "test\_" will be processed. See the next section for examples.
 
-NOTE: Running multiple tests, either via directory or passing multiple -m
-options does not work yet.
+When executing mozmill tests, you can use the --format and --logfile options to
+output events and results to a logfile.
 
 Examples
 ========
