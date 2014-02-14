@@ -150,11 +150,38 @@ Running MozMill Tests
 
 With obmtool you can run MozMill tests. Initial setup will occur using the
 configuration and arguments provided. To use obmtool in mozmill mode, pass a
-test file or directory to the -m option. When passing a directory, all files
-beginning with "test\_" will be processed. See the next section for examples.
+manifest, test file or directory to the -m option. When passing a directory,
+all files beginning with "test\_" will be processed. See the next section for
+examples.
 
 When executing mozmill tests, you can use the --format and --logfile options to
 output events and results to a logfile.
+
+As noted above, you can pass a test manifest to obmtool. This allows you to
+easily put conditions on tests or disable them for other reasons. The basic
+format is described
+[here](https://github.com/mozilla/mozbase/blob/master/docs/manifestdestiny.rst).
+In addition to what mozinfo defines (most importantly `os`), a few other variables
+are predefined from the options passed to obmtool (values are examples):
+
+    tb\_version = 24.0.2
+    ltn\_version = 2.6.4
+    obm\_version = 4.0.2
+
+Each of the version variables is additionally split up into major, minor and
+maintenance values for convenience. Example:
+
+    ltn\_version = 2.6.4
+    ltn\_major = 2
+    ltn\_minor = 6
+    ltn\_maintenance = 4
+
+You can use these variables in the passed manifest.ini. Note that currently the
+manifest parser only supports a very limited set of operators, please check the
+documentation.
+
+    [test_sso_buttons.js]
+    run-if = tb_major == 24
 
 Examples
 ========

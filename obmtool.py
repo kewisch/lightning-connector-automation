@@ -11,16 +11,18 @@ import traceback
 import re
 import sys
 import os
-import iniparse
 
 from obmtool.runner import ObmRunner
 from obmtool.config import config
 from obmtool.report import JUnitReport
+import obmtool.utils
 
+from manifestparser import TestManifest
 import jsbridge
 import mozmill
 import mozmill.logger
 import mozmill.report
+import mozinfo
 
 def createRunner(args):
   return ObmRunner.create(binary=args.thunderbird, profile_args={
@@ -62,16 +64,8 @@ def parseArgs():
     # Otherwise it was probably a path. Keep the path in args.thunderbird and
     # get the version from Thunderbird's application.ini
     args.thunderbird = os.path.expanduser(args.thunderbird)
-    macpath = os.path.join(args.thunderbird, "Contents", "MacOS")
-    configFile = os.path.join(macpath if os.path.exists(macpath) else args.thunderbird, "application.ini")
-
-    if not os.path.exists(configFile):
-        raise IOError("Could not find Thunderbird at %s" % args.thunderbird)
-
-    with open(configFile) as fp:
-        appini = iniparse.INIConfig(fp)
-        args.tbversion = int(appini['App']['Version'].split(".")[0])
-
+    tbversion = obmtool.utils.getThunderbirdVersion(args.thunderbird)
+    args.tbversion = int(tbversion.split(".")[0])
 
   # Set up default lightning xpi based on either passed token (i.e tb3) or
   # passed thunderbird version
@@ -140,6 +134,9 @@ def parseArgs():
   # Set up extra preferences in the profile
   args.preferences = extraprefs
 
+  # Set up mozinfo for our current configuration
+  mozinfo.update(obmtool.utils.setupMozinfo(args))
+
   # For the following args we need the runner already
   runner = createRunner(args)
 
@@ -207,13 +204,20 @@ def run_mozmill(runner, args):
     if not os.path.exists(testpath):
       raise Exception("Not a valid test file/directory: %s" % test)
 
-    def testname(t):
-      if os.path.isdir(realpath):
-        return os.path.join(test, os.path.relpath(t, testpath))
-      return test
+    root,ext = os.path.splitext(testpath)
+    if ext == ".ini":
+        # This is a test manifest, use the parser instead
+        manifest = TestManifest(manifests=[testpath], strict=False)
+        print mozinfo.info
+        tests.extend(manifest.active_tests(**mozinfo.info))
+    else:
+      def testname(t):
+        if os.path.isdir(realpath):
+          return os.path.join(test, os.path.relpath(t, testpath))
+        return test
 
-    tests.extend([{'name': testname(t), 'path': t }
-                  for t in mozmill.collect_tests(testpath)])
+      tests.extend([{'name': testname(t), 'path': t }
+                    for t in mozmill.collect_tests(testpath)])
 
   if args.verbose and len(tests):
     print "Running these tests:"
