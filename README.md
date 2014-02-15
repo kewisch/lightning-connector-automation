@@ -164,17 +164,17 @@ format is described
 In addition to what mozinfo defines (most importantly `os`), a few other variables
 are predefined from the options passed to obmtool (values are examples):
 
-    tb\_version = 24.0.2
-    ltn\_version = 2.6.4
-    obm\_version = 4.0.2
+    tb_version = 24.0.2
+    ltn_version = 2.6.4
+    obm_version = 4.0.2
 
 Each of the version variables is additionally split up into major, minor and
 maintenance values for convenience. Example:
 
-    ltn\_version = 2.6.4
-    ltn\_major = 2
-    ltn\_minor = 6
-    ltn\_maintenance = 4
+    ltn_version = 2.6.4
+    ltn_major = 2
+    ltn_minor = 6
+    ltn_maintenance = 4
 
 You can use these variables in the passed manifest.ini. Note that currently the
 manifest parser only supports a very limited set of operators, please check the
