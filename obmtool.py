@@ -136,11 +136,11 @@ def parseArgs():
     # the sync takes so long.
     extraprefs['extensions.obm.syncOnStart'] = False
 
+    # Set up mozinfo for our current configuration
+    mozinfo.update(obmtool.utils.setupMozinfo(args))
+
   # Set up extra preferences in the profile
   args.preferences = extraprefs
-
-  # Set up mozinfo for our current configuration
-  mozinfo.update(obmtool.utils.setupMozinfo(args))
 
   # For the following args we need the runner already
   runner = createRunner(args)

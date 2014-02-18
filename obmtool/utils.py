@@ -33,12 +33,13 @@ def setupMozinfo(args):
 def setupExtensionInfo(path, prefix):
   root, ext = os.path.splitext(path)
   if os.path.isdir(path):
-    installRDF = open(os.path.join(path, "install.rdf")).read()
+    with open(os.path.join(path, "install.rdf")) as installRDF:
+      dom = xml.dom.minidom.parse(installRDF)
   elif ext.lower() == ".xpi":
     with zipfile.ZipFile(path) as zippi:
-      installRDF = zippi.open("install.rdf").read()
+      installRDF = zippi.open("install.rdf")
+      dom = xml.dom.minidom.parse(installRDF)
 
-  dom = xml.dom.minidom.parseString(installRDF)
   version = dom.getElementsByTagNameNS("*", "version")[0].firstChild.nodeValue
   return createVersionProps(version, prefix)
 
