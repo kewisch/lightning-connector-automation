@@ -23,6 +23,7 @@ import mozmill
 import mozmill.logger
 import mozmill.report
 import mozinfo
+import mozversion
 
 def createRunner(args):
   return ObmRunner.create(binary=args.thunderbird, profile_args={
@@ -60,11 +61,12 @@ def parseArgs():
     # First check if a version number was passed and get the path from the config
     args.tbversion = int(args.thunderbird)
     args.thunderbird = os.path.expanduser(config.require("paths", "thunderbird-%s" % args.tbversion))
+    args.thunderbird = obmtool.utils.fixBinaryPath(args.thunderbird)
   except ValueError:
     # Otherwise it was probably a path. Keep the path in args.thunderbird and
     # get the version from Thunderbird's application.ini
-    args.thunderbird = os.path.expanduser(args.thunderbird)
-    tbversion = obmtool.utils.getThunderbirdVersion(args.thunderbird)
+    args.thunderbird = obmtool.utils.fixBinaryPath(os.path.expanduser(args.thunderbird))
+    tbversion = mozversion.get_version(args.thunderbird)['application_version']
     args.tbversion = int(tbversion.split(".")[0])
 
   # Set up default lightning xpi based on either passed token (i.e tb3) or

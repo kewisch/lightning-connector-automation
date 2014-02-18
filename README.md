@@ -13,7 +13,7 @@ Setup
 The tool has not been packaged as a python package yet, so you will
 have to first install a few dependencies:
 
-    pip install M2Crypto iniparse mozrunner mozprofile mozmill
+    pip install M2Crypto iniparse mozrunner mozprofile mozmill mozversion
 
 Now you will need to copy the obmtoolrc file to ~/.obmtoolrc and make
 any modifications you need. You also need to create the profileCache
@@ -68,12 +68,11 @@ is the alias that can be used on the commandline.
     obm-next-tb17=~/obm/tb17/lightning-connector-pkewisch/build/stage
 
     # Location of various Thunderbird packages. On mac this is the
-    # path to Thunderbird.app, on other platforms the path containing
-    # Thunderbird's executables.
-    thunderbird-24=~/mozilla/tbesr24/Thunderbird.app
-    thunderbird-17=~/mozilla/tbesr17/Thunderbird.app
-    thunderbird-10=~/mozilla/tbesr10/Thunderbird.app
-    thunderbird-3=~/mozilla/tb31/Thunderbird.app
+    # path to the application bundle, on other platforms the path to the
+    # Thunderbird executable
+    thunderbird-24=~/mozilla/tbesr24/thunderbird/thunderbird-bin  # Linux example
+    thunderbird-17=~/mozilla/tbesr17/Thunderbird.app              # Mac example
+    thunderbird-10=d:/thunderbird10/thunderbird.exe               # Windows example
 
     # Cache directory for profiles. You need to create this directory.
     profileCache=~/.obmtool/cache

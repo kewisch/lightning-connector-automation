@@ -9,6 +9,12 @@ import zipfile
 import iniparse
 import xml.dom.minidom
 
+import mozinfo
+import mozversion
+
+if mozinfo.isMac:
+    from plistlib import readPlist
+
 def setupMozinfo(args):
   info = {
     "test_enabled": True,
@@ -19,7 +25,7 @@ def setupMozinfo(args):
   info.update(setupExtensionInfo(args.obm, "obm"))
   info.update(setupExtensionInfo(args.lightning, "lightning"))
 
-  tbversion = getThunderbirdVersion(args.thunderbird)
+  tbversion = mozversion.get_version(args.thunderbird)['application_version']
   info.update(createVersionProps(tbversion, "tb"))
 
   return info
@@ -54,15 +60,12 @@ def createVersionProps(version, prefix):
 
   return info
 
-def getThunderbirdVersion(path):
-    macpath = os.path.join(path, "Contents", "MacOS")
-    appini = os.path.join(macpath if os.path.exists(macpath) else path, "application.ini")
+def fixBinaryPath(binary):
+  if mozinfo.isMac:
+    plist = '%s/Contents/Info.plist' % binary
+    if not os.path.isfile(plist):
+      raise Exception('%s/Contents/Info.plist not found' % binary)
 
-    if not os.path.exists(appini):
-      raise IOError("Could not find Thunderbird at %s" % path)
-
-    with open(appini) as fp:
-        iniconfig = iniparse.INIConfig(fp)
-        tbversion = iniconfig['App']['Version']
-
-    return tbversion
+    binary = os.path.join(binary, 'Contents/MacOS/',
+                          readPlist(plist)['CFBundleExecutable'])
+  return binary
