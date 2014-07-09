@@ -27,6 +27,10 @@ This section holds defaults for command line options:
     # The default OBM user to set up
     user=kewisch
 
+    # The password for the OBM user. Make sure config file permissions are
+    # strict (0600) when using this option.
+    password=xxx
+
     # The URL of the OBM server to use
     server=https://myobm.obm.org/obm-sync/services
 

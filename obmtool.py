@@ -8,6 +8,7 @@ import argparse
 import logging
 import tempfile
 import traceback
+import stat
 import re
 import sys
 import os
@@ -28,6 +29,7 @@ import mozversion
 def createRunner(args):
   return ObmRunner.create(binary=args.thunderbird, profile_args={
                             'userName': args.user,
+                            'password': args.password,
                             'serverUri': args.server,
                             'tbVersion': args.tbversion,
                             'addons': args.extension,
@@ -37,24 +39,60 @@ def createRunner(args):
                           })
 
 def parseArgs():
+  home = os.path.expanduser("~")
+  filename = ".obmtoolrc" if os.name == "posix" else "obmtool.ini"
+  defaultconfig = os.path.join(home, filename)
+
+  # When adding new arguments, DO NOT USE the config dict yet. See config file loading below.
   parser = argparse.ArgumentParser(description="Start Thunderbird with a preconfigured OBM setup")
-  parser.add_argument('-t', '--thunderbird', type=str, default=config.get("defaults", "tbversion"), help="The Thunderbird version (17,24,...), or a path to the binary.")
+  parser.add_argument('-t', '--thunderbird', type=str, help="The Thunderbird version (17,24,...), or a path to the binary.") # default: defaults.tbversion
   parser.add_argument('-l', '--lightning', type=str, help="The path to the Lightning XPI")
   parser.add_argument('-o', '--obm', type=str, help="The path to the OBM XPI")
-  parser.add_argument('-u', '--user', type=str, default=config.get("defaults", "user"), help="The OBM user to set up")
-  parser.add_argument('-s', '--server', type=str, default=config.get("defaults", "server"),  help="The sync services URI")
+  parser.add_argument('-u', '--user', type=str, help="The OBM user to set up") # default: defaults.user
+  parser.add_argument('-s', '--server', type=str, help="The sync services URI") # default: defaults.server
   parser.add_argument('-e', '--extension', type=str, nargs='+', default=[], help="An additional extension to install, can be specified multiple times")
   parser.add_argument('-p', '--pref', type=str, nargs='+', default=[], metavar='key=value', help="Additional preferences to set, can be specified multiple times. Value can be a string, integer or true|false.")
-  parser.add_argument('-r', '--reset', action='store_true', default=config.get("defaults", "reset"), help="Reset the currently used profile before starting")
+  parser.add_argument('-r', '--reset', action='store_true', help="Reset the currently used profile before starting") # default: defaults.reset
+  parser.add_argument('-c', '--config', default=None, help="Config file to use (default: %s)" % defaultconfig)
   parser.add_argument('-m', '--mozmill', type=str, nargs='+', default=[], help="Run a specific mozmill test")
   parser.add_argument('--format', type=str, default='pprint-color', metavar='[pprint|pprint-color|json|xunit]', help="Mozmill output format (default: pprint-color)")
   parser.add_argument('--logfile', type=str, default=None, help="Log mozmill events to a file in addition to the console")
-  parser.add_argument('-v', '--verbose', action='store_true', default=config.get("defaults", "verbose"), help="Show more information about whats going on")
+  parser.add_argument('-v', '--verbose', action='store_true', help="Show more information about whats going on") # default: defaults.verbose
   args = parser.parse_args()
 
   # Set up logging
   if args.verbose:
     logging.basicConfig(level=logging.INFO)
+
+  # Read user config, this needs to be done fairly early
+  if not args.config:
+    args.config = defaultconfig
+  if not os.path.exists(args.config):
+    print "Config file %s does not exist" % os.path.abspath(args.config)
+    sys.exit(1)
+  mode = os.stat(args.config)[stat.ST_MODE]
+  logging.info("Reading configuration from %s" % os.path.abspath(args.config))
+  config.readUserFile(args.config)
+
+  # Protect from footgun
+  if config.get("defaults", "password") and mode & (stat.S_IRGRP | stat.S_IWOTH | stat.S_ISUID | stat.S_ISGID) != 0:
+    print "Attempt to read config file %s that contains a password and has too open permissions. Change mode to 0600 or equivalent." % args.config
+    sys.exit(1)
+
+  # Set up defaults that are taken from the config file, these need to be
+  # merged after we load the right config file
+  configdefaults = {
+    "thunderbird": config.get("defaults", "tbversion"),
+    "user": config.get("defaults", "user"),
+    "password": config.get("defaults", "password"),
+    "server": config.get("defaults", "server"),
+    "reset": config.get("defaults", "reset"),
+    "verbose": config.get("defaults", "verbose")
+  }
+  for k in configdefaults:
+    if not k in args.__dict__ or args.__dict__[k] is None:
+      args.__dict__[k] = configdefaults[k]
+
 
   # Set up the Thunderbird version and path
   try:

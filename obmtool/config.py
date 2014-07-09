@@ -12,22 +12,17 @@ class ObmToolConfig(object):
     self.defaultConfig = {}
     self.userConfig = {}
     self.dirty = False
+    self.userFilePath = None
 
   def readDefaultFile(self):
-    fullpath = os.path.join(os.path.dirname(__file__), "..", "crutoolrc")
+    fullpath = os.path.join(os.path.dirname(__file__), "..", "obmtoolrc")
     if os.path.exists(fullpath):
       self.defaultConfig = INIConfig(open(fullpath))
 
-  @property
-  def userFilePath(self):
-    home = os.path.expanduser("~")
-    filename = ".obmtoolrc" if os.name == "posix" else "obmtool.ini"
-    return os.path.join(home, filename)
-
-  def readUserFile(self):
-    if os.path.exists(self.userFilePath):
-      self.dirty = False
-      self.userConfig = INIConfig(open(self.userFilePath))
+  def readUserFile(self, userFilePath=None):
+    self.userFilePath = userFilePath
+    self.dirty = False
+    self.userConfig = INIConfig(open(self.userFilePath))
 
   def saveUserFile(self):
     if self.dirty:
@@ -90,4 +85,3 @@ class ObmToolConfig(object):
 # our global instance
 config = ObmToolConfig()
 config.readDefaultFile()
-config.readUserFile()

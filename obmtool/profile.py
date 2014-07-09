@@ -16,7 +16,7 @@ from certificates import CertOverrideFile, CertOverrideEntry
 from signons import Signons3File, SignonFileEntry
 
 class ObmProfile(ThunderbirdProfile):
-  def __init__(self, userName, serverUri,
+  def __init__(self, userName, password, serverUri,
                tbVersion, cachePath="profileCache", reset=False, *args, **kwargs):
     self.profileName = "%s-tb%d-%s" % (userName, tbVersion, time.strftime("%Y-%m-%d", time.localtime()))
     profilePath = os.path.join(cachePath, self.profileName)
@@ -27,6 +27,7 @@ class ObmProfile(ThunderbirdProfile):
 
     super(ObmProfile, self).__init__(profile=profilePath, *args, **kwargs)
     self.userName = userName
+    self.password = password
     self.serverUri = serverUri
     self.tbVersion = tbVersion
 
@@ -107,20 +108,21 @@ class ObmProfile(ThunderbirdProfile):
     self.set_preferences(self._preferences, 'prefs.js')
 
     # Add saved passwords
+    password = self.password or self.userName
     self.signons.addEntry(
       hostname="obm-obm-obm",
       httpRealm="obm-obm-obm",
-      user=self.userName, password=self.userName
+      user=self.userName, password=password
     )
     self.signons.addEntry(
       hostname="imap://%s" % serverUri.hostname,
       httpRealm="imap://%s" % serverUri.hostname,
-      user=userEmail, password=self.userName
+      user=userEmail, password=password
     )
     self.signons.addEntry(
       hostname="smtp://%s" % serverUri.hostname,
       httpRealm="smtp://%s" % serverUri.hostname,
-      user=userEmail, password=self.userName
+      user=userEmail, password=password
     )
 
     # Create certificate overrides
