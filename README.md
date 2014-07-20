@@ -10,10 +10,9 @@ certificate overrides.
 Setup
 =====
 
-The tool has not been packaged as a python package yet, so you will
-have to first install a few dependencies:
+Dependencies are managed by setuptools, so all you need to do is:
 
-    pip install M2Crypto iniparse mozrunner mozprofile mozmill mozversion
+    python setup.py install
 
 Now you will need to copy the obmtoolrc file to ~/.obmtoolrc and make
 any modifications you need. You also need to create the profileCache
@@ -210,7 +209,6 @@ Run all mozmill tests in the ~/tests directory, using the same options.
 Roadmap
 =======
 
-* Package as python package with setup.py
 * Allow passing http urls to -l or -o, possibly with a configurable
   prefix (i.e for getting a package from jenkins)
 * Some more commandline options, i.e devtools debugger port, common

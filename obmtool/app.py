@@ -314,6 +314,9 @@ def run_thunderbird(runner, args):
   finally:
     logfile.close()
 
-if __name__ == "__main__":
+def main():
   runner, args = parseArgs()
   run(runner, args)
+
+if __name__ == "__main__":
+  main()
