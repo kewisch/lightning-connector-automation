@@ -32,6 +32,7 @@ def createRunner(args):
                             'password': args.password,
                             'serverUri': args.server,
                             'tbVersion': args.tbversion,
+                            'binary': args.thunderbird,
                             'addons': args.extension,
                             'cachePath': args.cachePath,
                             'preferences': args.preferences,

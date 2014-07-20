@@ -13,11 +13,11 @@ import sys
 import time
 
 from certificates import CertOverrideFile, CertOverrideEntry
-from signons import Signons3File, SignonFileEntry
+from signons import SignonsSQLFile, Signons3File
 
 class ObmProfile(ThunderbirdProfile):
   def __init__(self, userName, password, serverUri,
-               tbVersion, cachePath="profileCache", reset=False, *args, **kwargs):
+               tbVersion, binary, cachePath="profileCache", reset=False, *args, **kwargs):
     self.profileName = "%s-tb%d-%s" % (userName, tbVersion, time.strftime("%Y-%m-%d", time.localtime()))
     profilePath = os.path.join(cachePath, self.profileName)
 
@@ -31,7 +31,13 @@ class ObmProfile(ThunderbirdProfile):
     self.serverUri = serverUri
     self.tbVersion = tbVersion
 
-    self.signons = Signons3File(path=os.path.join(profilePath, "signons3.txt"))
+    # Thunderbird 3 doesn't have 64-bit NSS libraries on mac, use the old
+    # signons file for this version
+    if self.tbVersion > 3:
+      self.signons = SignonsSQLFile(profilePath, os.path.dirname(binary))
+    else:
+      self.signons = Signons3File(os.path.join(profilePath, "signons3.txt"))
+
     self.overrides = CertOverrideFile(os.path.join(profilePath,"cert_override.txt"))
 
     self.initProfile()

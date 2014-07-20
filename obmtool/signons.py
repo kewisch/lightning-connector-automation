@@ -1,12 +1,14 @@
 import sqlite3
 import uuid
 import time
-from base64 import b64encode,b64decode
 import sys
 import math
 import os
 import re
 import csv
+
+from base64 import b64encode, b64decode
+from nss import NSSSession
 
 class SignonFileEntry(object):
   def __init__(self, hostname="", httpRealm="", user="", password=""):
@@ -111,9 +113,17 @@ class Signons3File(object):
     fp.write("\n".join(map(str, self.entries)))
     fp.close()
 
-class SignonsSQLFile:
-  def __init__(self, path="signons.sqlite"):
-    self.conn = sqlite3.connect(path)
+
+class SignonsSQLFile(object):
+  def __init__(self, profilePath, binPath, signonsSQLPath=None):
+    self.profilePath = profilePath
+    self.binPath = binPath
+
+    if not signonsSQLPath:
+        signonsSQLPath  = os.path.join(profilePath, "signons.sqlite")
+
+    self.nssSession = NSSSession(self.binPath, self.profilePath)
+    self.conn = sqlite3.connect(signonsSQLPath)
 
     c = self.conn.cursor()
     c.execute("PRAGMA user_version")
@@ -169,40 +179,55 @@ class SignonsSQLFile:
     self.conn.commit()
     c.close()
 
-  def addLoginEntry(self, hostname, httpRealm, user, password):
-    c = self.conn.cursor()
+  def write(self):
+    self.nssSession.stop()
+    self.conn.commit()
+
+  def addEntry(self, hostname, httpRealm, user, password):
     now = math.floor(time.time() * 1000)
     params = dict()
 
     # Explicit args
     params['hostname'] = hostname
     params['httpRealm'] = httpRealm
-    params['usernameField'] = user
-    params['passwordField'] = password
+    params['encryptedUsername'] = self.nssSession.encrypt(user)
+    params['encryptedPassword'] = self.nssSession.encrypt(password)
 
     # automatic args
     params['formSubmitURL'] = ''
     params['usernameField'] = ''
     params['passwordField'] = ''
-    params['encryptedUsername'] = b64encode(user)
-    params['encryptedPassword'] = b64encode(password)
     params['guid'] = "{%s}" % str(uuid.uuid4())
-    params['encType'] = 0 # standard base64. Will be upgraded on startup.
+    params['encType'] = 1
     params['timeCreated'] = now
     params['timeLastUsed'] = now
     params['timePasswordChanged'] = now
     params['timesUsed'] = 1
 
-    c.execute("""INSERT INTO moz_logins
-                   (hostname, httpRealm, formSubmitURL, usernameField,
-                    passwordField, encryptedUsername, encryptedPassword, guid,
-                    encType, timeCreated, timeLastUsed, timePasswordChanged,
-                    timesUsed)
-                  VALUES (:hostname, :httpRealm, :formSubmitURL,
-                          :usernameField, :passwordField, :encryptedUsername,
-                          :encryptedPassword, :guid, :encType, :timeCreated,
-                          :timeLastUsed, :timePasswordChanged, :timesUsed)
-               """, params)
+    c = self.conn.cursor()
+    if self.conn.execute("""SELECT 1 FROM moz_logins
+                             WHERE (hostname=:hostname AND httpRealm=:httpRealm)
+                             """, params).fetchone() is None:
+        c.execute("""INSERT INTO moz_logins
+                       (hostname, httpRealm, formSubmitURL, usernameField,
+                        passwordField, encryptedUsername, encryptedPassword, guid,
+                        encType, timeCreated, timeLastUsed, timePasswordChanged,
+                        timesUsed)
+                      VALUES (:hostname, :httpRealm, :formSubmitURL,
+                              :usernameField, :passwordField, :encryptedUsername,
+                              :encryptedPassword, :guid, :encType, :timeCreated,
+                              :timeLastUsed, :timePasswordChanged, :timesUsed)
+                   """, params)
+    else:
+        c.execute("""UPDATE moz_logins
+                        SET guid=:guid, encType=:encType,
+                            encryptedUsername=:encryptedUsername,
+                            encryptedPassword=:encryptedPassword,
+                            timeCreated=:timeCreated,
+                            timeLastUsed=:timeLastUsed,
+                            timePasswordChanged=:timePasswordChanged,
+                            timesUsed=:timesUsed
+                   """, params)
     self.conn.commit()
     c.close()
 
