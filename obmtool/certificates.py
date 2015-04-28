@@ -11,10 +11,13 @@ class CertOverrideEntry:
   SHA256_OID = "OID.2.16.840.1.101.3.4.2.1"
 
   @staticmethod
-  def fromHost(host, port, certtype='U', ssl_version=ssl.PROTOCOL_SSLv3):
+  def fromHost(host, port, certtype='U', ssl_version=None):
     logging.info("Getting certificate from %s:%d" % (host, port))
-    cert = ssl.get_server_certificate((host, port), ssl_version=ssl_version)
-    x509 = X509.load_cert_string(cert, X509.FORMAT_PEM)
+    if ssl_version is None:
+      cert = ssl.get_server_certificate((host, port))
+    else:
+      cert = ssl.get_server_certificate((host, port), ssl_version=ssl_version)
+    x509 = X509.load_cert_string(cert.encode('ascii', 'ignore'))
     return CertOverrideEntry(host, port, x509=x509, certtype=certtype)
 
   def __init__(self, host, port, fingerprint=None, certtype='U', issuerSerialHash=None, x509=None):
