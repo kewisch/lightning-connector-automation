@@ -24,10 +24,10 @@ profileCache=~/.obmtool/cache
 [profile]
 #certificates=vm.obm.org:443,vm.obm.org:143
 #signons=obm-obm-obm|obm-obm-obm|userb|userb
-extensions=
- ~/mozilla/dist-extensions/ics-inspector-0.8.xpi
- ~/mozilla/dist-extensions/obmdeveloper-0.1.xpi
 
 [preferences]
 #dom.report_all_js_exceptions=True
 #nglayout.debug.disable_xul_cache=True
+#extensions=
+# ~/mozilla/dist-extensions/ics-inspector-0.8.xpi
+# ~/mozilla/dist-extensions/obmdeveloper-0.1.xpi
